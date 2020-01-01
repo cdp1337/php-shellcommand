@@ -317,6 +317,89 @@ class Command
         return $this;
     }
 
+	/**
+	 * Add a simple key to the argument list
+	 *
+	 * KEY IS NOT ESCAPED!
+	 *
+	 * @param string $key
+	 *
+	 * @return Command
+	 */
+    public function addArgKey(string $key) : self {
+		$this->_args[] = $key;
+
+		// Allow chaining
+		return $this;
+	}
+
+	/**
+	 * Add a simple value to the argument list
+	 *
+	 * This value is assumed to be untrusted, so it will be escaped.
+	 *
+	 * @param string|string[] $value
+	 *
+	 * @return Command
+	 */
+	public function addArgValue($value) : self {
+		$useLocale = $this->locale !== null;
+
+		if($useLocale) {
+			$locale = setlocale(LC_CTYPE, 0);   // Returns current locale setting
+			setlocale(LC_CTYPE, $this->locale);
+		}
+
+		if(is_array($value)) {
+			$this->_args[] = implode(' ', array_map('escapeshellarg', $value));
+		}
+		else {
+			$this->_args[] = escapeshellarg($value);
+		}
+
+		if($useLocale) {
+			setlocale(LC_CTYPE, $locale);
+		}
+
+		// Allow chaining
+		return $this;
+	}
+
+	/**
+	 * Add a key/value pair to the argument list
+	 *
+	 * The key is assumed to be trusted, so it is NOT escaped,
+	 * while the value is untrusted, and is escaped.
+	 *
+	 * @param string $key
+	 * @param string|string[] $value
+	 * @param string $separator
+	 *
+	 * @return Command
+	 */
+	public function addArgKeyValue(string $key, $value, string $separator = '=') : self {
+		$useLocale = $this->locale !== null;
+
+		if($useLocale) {
+			$locale = setlocale(LC_CTYPE, 0);   // Returns current locale setting
+			setlocale(LC_CTYPE, $this->locale);
+		}
+
+		if(is_array($value)) {
+			$this->_args[] = $key . $separator . implode(' ', array_map('escapeshellarg', $value));
+		}
+		else {
+			$this->_args[] = $key . $separator . escapeshellarg($value);
+		}
+
+		if($useLocale) {
+			setlocale(LC_CTYPE, $locale);
+		}
+
+		// Allow chaining
+		return $this;
+	}
+
     /**
      * @param bool $trim whether to `trim()` the return value. The default is `true`.
      * @return string the command output (stdout). Empty if none.
